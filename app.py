@@ -27,8 +27,65 @@ def handle_message(event_data):
     text = message.get('text')
     if "hi" in text:
         channel = message["channel"]
-        message = "ss"
-        slack_client.chat_postMessage(channel=channel, text=message)
+        message = "試行"
+        blocks =    [
+                        {
+                            "type": "section",
+                            "text": {
+                                "type": "mrkdwn",
+                                "text": "You have a new request:\n*<fakeLink.toEmployeeProfile.com|Fred Enriquez - New device request>*"
+                            }
+                        },
+                        {
+                            "type": "section",
+                            "fields": [
+                                {
+                                    "type": "mrkdwn",
+                                    "text": "*Type:*\nComputer (laptop)"
+                                },
+                                {
+                                    "type": "mrkdwn",
+                                    "text": "*When:*\nSubmitted Aut 10"
+                                },
+                                {
+                                    "type": "mrkdwn",
+                                    "text": "*Last Update:*\nMar 10, 2015 (3 years, 5 months)"
+                                },
+                                {
+                                    "type": "mrkdwn",
+                                    "text": "*Reason:*\nAll vowel keys aren't working."
+                                },
+                                {
+                                    "type": "mrkdwn",
+                                    "text": "*Specs:*\n\"Cheetah Pro 15\" - Fast, really fast\""
+                                }
+                            ]
+                        },
+                        {
+                            "type": "actions",
+                            "elements": [
+                                {
+                                    "type": "button",
+                                    "text": {
+                                        "type": "plain_text",
+                                        "text": "Approve"
+                                    },
+                                    "style": "primary",
+                                    "value": "click_me_123"
+                                },
+                                {
+                                    "type": "button",
+                                    "text": {
+                                        "type": "plain_text",
+                                        "text": "Deny"
+                                    },
+                                    "style": "danger",
+                                    "value": "click_me_123"
+                                }
+                            ]
+                        }
+                    ]
+    slack_client.chat_postMessage(channel=channel, text=message, blocks=blocks)
 
 @app.route('/interactive', methods=['POST'])
 def interactive():
