@@ -17,6 +17,10 @@ slack_events_adapter = SlackEventAdapter(slack_signing_secret, "/slack/events", 
 
 slack_client = WebClient(slack_bot_token)
 
+@app.route('/')
+def hello_world():
+    return 'Hello World!'
+
 @slack_events_adapter.on("message")
 def handle_message(event_data):
     message = event_data["event"]
