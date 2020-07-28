@@ -98,8 +98,8 @@ def slack_app():
                     database.change_id(task_id, 'status', '済')
                 return make_response("", 200)
             elif payload["actions"][0]["value"] == 'unfinished':
-                task_user = payload["block_id"]
-                task_id = payload["action_id"][1:]
+                task_user = payload["actions"][0]["block_id"]
+                task_id = payload["actions"][0]["action_id"][1:]
                 if task_user == user_id:
                     database = DB(os.environ["TODO_DB"])
                     database.change_id(task_id, 'status', '未')
