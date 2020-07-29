@@ -57,7 +57,7 @@ class Notice():
                                 "type":"section",
                                 "text":{
                                     "type":"mrkdwn",
-                                    "text": '*'+ dict["title"] + '*\n' + '期限：' + dict["limit_at"] + '\nid：' + dict["id"]
+                                    "text": '*'+ dict["title"] + '*\n' + '期限：' + dict["limit_at"] + '\nid：' + str(dict["id"])
                                 }
                             },
                             {
@@ -95,10 +95,11 @@ class Notice():
                                 }
                             },                 
                             {
-                                "type":"section",
+                                "type": "section",
+                                "block_id": "status",
                                 "text":{
                                     "type":"mrkdwn",
-                                    "text": '*'+ dict["title"] + '*\n' + '期限：' + dict["limit_at"] + '\nid：' + dict["id"]
+                                    "text": '*'+ dict["title"] + '*\n' + '期限：' + dict["limit_at"] + '\nid：' + str(dict["id"])
                                 }
                             },
                             {
@@ -113,7 +114,7 @@ class Notice():
                                         },
                                         "style": "primary",
                                         "value": "finished",
-                                        "action_id": dict["id"]
+                                        "action_id": str(dict["id"])
                                     },
                                     {
                                         "type": "button",
@@ -123,11 +124,11 @@ class Notice():
                                             "emoji": True
                                         },
                                         "value": "unfinished",
-                                        "action_id": 'u'+ dict["id"]
+                                        "action_id": 'u'+ str(dict["id"])
                                     }
                                 ]
                             }
                           ]
                 db.change_id(dict['id'], 'noticetime', noticetime)
-                slack_client_n.chat_postMessage(channel=os.environ['SLACK_CHANNEL'], blocks=blocks)
+                slack_client_n.chat_postMessage(channel=dict["user"], blocks=blocks, as_user=True)
                 # pprint.pprint(tools.postMessage(text, attachments, channel=os.environ['SLACK_CHANNEL']))
