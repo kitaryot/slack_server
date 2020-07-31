@@ -9,22 +9,22 @@ import datetime
 import os
 import sqlite3
 from . import tools
+import asyncio
 
 
-def asmadd(newdata):
-    database = DB(os.environ['TODO_DB'])
+def asmadd(newdata, database):
     olddata = database.dict_list()
+    newnewdatas = []
     for data in newdata:
         # 過去に追加しているかみる
         for old in olddata:
-            # 過去verとの関係を保つためにorで二種類用意
-            if data["subject"]+" "+data["title"] == old["title"] or(data["title"] == old["title"] and data["subject"] == old["subject"]):
-                if old["status"] == "済":
-                    # 過去に既に存在していて、済んでいる->"済"を引き継いだまま更新する
-                    data["status"] = "済"
-                # 旧情報を消す。
-                database.delete_id(old["id"])
-        database.add_dict(data)
+            if data["subject"]+data["title"] == old["subject"]+old["title"]:
+                break
+        else:
+            newnewdatas.append(data)
+    
+    for newnewdata in newnewdatas:
+        database.add_dict(newnewdata)
 
 
 def strarrange(assignments):
@@ -42,56 +42,51 @@ def strarrange(assignments):
             # status = "未"
             status = tools.autostatus(assignment, now)
         newarr.append(
-            {"title": assignment["title"], "status": status, "limit_at": dueDate, "subject": assignment["subject"]})
+            {"title": assignment["title"], "status": status, "limit_at": dueDate, "subject": assignment["subject"], "user": assignment["user"],})
     return newarr
 
 
-def main():
-    try:
-        import pickle
-        with open("data.dump", "rb") as f:
-            newdata = pickle.load(f)
-    except:
-        # ログインをする。そのときのセッションを保存する
-        session = login.login()
-        # 続いて自分のページに移動し、教科ごとのURLを得る
-        urls = login.tomypage(session)
-        assignment = []
-        # 各教科URLから課題を抽出
-        for url in urls:
-            data = gg.getassignment(session, url["url"], 0)
-            # 課題リストにはsubject情報も加える
-            for item in data:
-                assignment.append(
-                    {"title": item["title"], "status": item["status"], "dueDate": item["dueDate"], "subject": url["subject"]})
-            print("課題 " + url["subject"]+" finished")
+def main(user, username, password, database):
+    # try:
+    #     import pickle
+    #     with open("https://slack-interactive.herokuapp.com/tmp/data.dump", "rb") as f:
+    #         newdata = pickle.load(f)
+    # except:
+    # ログインをする。そのときのセッションを保存する
+    session = login.login(username, password)
+    # 続いて自分のページに移動し、教科ごとのURLを得る
+    urls = login.tomypage(session)
 
-        # 各教科URLからテスト・クイズも抽出
-        for url in urls:
-            data = gg.getassignment(session, url["url"], 1)
-            # リストにはsubject情報も加える
-            for item in data:
-                assignment.append(
-                    {"title": item["title"], "status": item["status"], "dueDate": item["dueDate"], "subject": url["subject"]})
-            print("テスト " + url["subject"]+" finished")
-        # 得られた課題リストをDBに格納するために整える
-        newdata = strarrange(assignment)
+    if urls == None:
+        return 400
+
+    assignment = []
+
+    # 各教科URLから課題を抽出        
+    for url in urls:
+        data = gg.getassignment(session, url["url"], 0)
+        # 課題リストにはsubject情報も加える
+        for item in data:
+            assignment.append(
+                {"title": item["title"], "status": item["status"], "dueDate": item["dueDate"], "subject": url["subject"], "user": user})
+            
+        print("課題 " + url["subject"]+" finished")
+
+
+    # 各教科URLからテスト・クイズも抽出
+    for url in urls:
+        data = gg.getassignment(session, url["url"], 1)
+        # リストにはsubject情報も加える
+        for item in data:
+            assignment.append(
+                {"title": item["title"], "status": item["status"], "dueDate": item["dueDate"], "subject": url["subject"], "user": user})
+        print("テスト " + url["subject"]+" finished")
+    # 得られた課題リストをDBに格納するために整える
+    newdata = strarrange(assignment)
 
     # 追加
-    asmadd(newdata)
+    asmadd(newdata, database)
     # id整頓
-    tools.todo_clean('TODO_DB')
-
+    database.clean()
     print("finish")
-
-
-@respond_to(r'todo\s+update$')
-def todo_update(message):
-    message.reply("少々時間がかかります。しばらくお待ちください。")
-    main()
-    msg = "todoリストを更新しました。"
-    message.reply(msg)
-
-@listen_to(r'^!update$')
-def com_todo_update(message):
-    todo_update(message)
+    return 200
