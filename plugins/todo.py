@@ -40,6 +40,15 @@ def todo_list(user):
         str_list += '\n'
     return str_list
 
+def todo_list_notdone(user):
+    database = DB(os.environ['TODO_DB'])
+    data = database.dict_list(show_over_deadline=2, user_id=user)
+    str_list = 'TODO list (期限切れ or 未提出):\n'
+    for r in data:
+        str_list += ', '.join(map(str, r.values()))
+        str_list += '\n'
+    return str_list
+
 def todo_list_all():
     database = DB(os.environ['TODO_DB'])
     return database.list()

@@ -11,14 +11,20 @@ def getmsginfo(message)-> dict:
     """ユーザー情報をdict形式で返す
     現在得られるのは
     
-    channel:チャンネル名
+    channel:チャンネル名(DMの場合はNone)
+    
+    channel_id:チャンネル固有のid
 
     user_id:ユーザー固有のid
 
     user_name:ユーザー名
     """
     info_dict={}
-    info_dict["channel"] = message.channel._body["name"]
+    try:
+        info_dict["channel"] = message.channel._body["name"]
+    except KeyError:
+        info_dict["channel"] = None
+    info_dict["channel_id"] = message.channel._body["id"]
     info_dict["user_id"] = message.user["id"]
     info_dict["user_name"] = message.user["real_name"]
     return info_dict
@@ -109,7 +115,7 @@ def autostatus(assignment, now, mode=0):
     return status
 
 # messageをpost
-def postMessage(text, attachments:list, channel="bot-test", username="お知らせ", icon_emoji=":snake:"):
+def postMessage(text, attachments:list, channel="bot-test", username="お知らせ", icon_emoji=":snake:", as_user=False):
     headers = {
         'Authorization': 'Bearer '+os.environ['SLACK_BOT_TOKEN'],
         'Content-Type': 'application/json; charset=utf-8'
@@ -119,7 +125,8 @@ def postMessage(text, attachments:list, channel="bot-test", username="お知ら�
         "username":username,
         "text":text,
         "attachments":attachments,
-        "icon_emoji":icon_emoji
+        "icon_emoji":icon_emoji,
+        "as_user": as_user
     }
     url = 'https://slack.com/api/chat.postMessage'
     r_post = requests.post(url, headers=headers, json=data)

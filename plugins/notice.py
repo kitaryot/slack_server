@@ -54,22 +54,26 @@ class Notice():
                         "color":color,
                         "blocks": [
                             {
-                                "type":"section",
+                                "type": "section",
+                                "block_id": "status",
                                 "text":{
                                     "type":"mrkdwn",
                                     "text": '*'+ dict["title"] + '*\n' + '期限：' + dict["limit_at"] + '\nid：' + str(dict["id"])
                                 }
                             },
                             {
-                                "type": "acitons",
+                                "type": "actions",
+                                "block_id": dict["user"],
                                 "elements": [
                                     {
                                         "type": "button",
                                         "text": {
                                             "type": "plain_text",
                                             "text": "完了！"
-                                            },
-                                        "value": "finished"
+                                        },
+                                        "style": "primary",
+                                        "value": "finished",
+                                        "action_id": str(dict["id"])
                                     },
                                     {
                                         "type": "button",
@@ -78,7 +82,8 @@ class Notice():
                                             "text": "未完了:thinking_face:",
                                             "emoji": True
                                         },
-                                        "value": 'unfinished'
+                                        "value": "unfinished",
+                                        "action_id": 'u'+ str(dict["id"])
                                     }
                                 ]
                             }
@@ -93,7 +98,7 @@ class Notice():
                                     "text": text,
                                     "emoji": True
                                 }
-                            },                 
+                            },
                             {
                                 "type": "section",
                                 "block_id": "status",
@@ -130,5 +135,6 @@ class Notice():
                             }
                           ]
                 db.change_id(dict['id'], 'noticetime', noticetime)
-                slack_client_n.chat_postMessage(channel=dict["user"], blocks=blocks, as_user=True)
-                # pprint.pprint(tools.postMessage(text, attachments, channel=os.environ['SLACK_CHANNEL']))
+                # slack_client_n.chat_postMessage(channel=dict["user"], blocks=blocks, as_user=True, color=color)
+                tools.postMessage(text, attachments, channel=dict["user"], as_user=True)
+

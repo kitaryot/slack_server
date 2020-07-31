@@ -5,9 +5,9 @@ import time
 from plugins import tools
 
 DEFAULT = {"title": "Noname", "limit_at": "2999/12/31 23:59",
-           "update_at": "2000/01/01 0:00", "status": "未", "noticetime": 3, "user": None}
+           "update_at": "2000/01/01 0:00", "status": "未", "noticetime": 3, "user": None, "deleted": 0, "subject": None}
 DEFAULT_TYPE = {"title": "text NOT NULL", "limit_at": "text",
-                "update_at": "text NOT NULL", "status": "text", "noticetime": "integer NOT NULL", "user": "text"}
+                "update_at": "text NOT NULL", "status": "text", "noticetime": "integer NOT NULL", "user": "text", "deleted":"bit", "subject": "text"}
 
 
 class DB(object):
@@ -49,22 +49,44 @@ class DB(object):
         """一度テーブルを削除して再生成する
 
         このとき、テーブル内のデータは保たれる
-        
-        idの値がとびとびになってしまった際や列を追加した際にアップデートとして用いられる
+
+        列を追加した際にアップデートとして用いられる
         """
-        dict_list = self.dict_list()
+        dict_list = self.dict_list(mode=1)
         self.__drop_table()
         self.__create_table()
         for i in range(len(dict_list)):
-            # 本来ないはずだが不正なデータは追加しない
+            # 本来ないはずだが不正なデータは削除データとして追加
             if dict_list[i]["title"] == None or dict_list[i]["title"] == "None":
-                continue
-            if dict_list[i]["update_at"] == None or dict_list[i]["update_at"] == "None":
-                continue
+                dict_list[i]["deleted"]=1
+                dict_list[i]["limit_at"]=DEFAULT["limit_at"]
             self.add_dict(dict_list[i])
 
+    def delete_id(self, id: str, userid) -> int:
+        """指定したidのデータを削除する
 
-    
+        ユーザーに権限がない場合は-1を返す
+        """
+        if self.select_id(id)["user"]==userid:
+            result = self.change_id(id, "deleted", 1)
+        else:
+            result = -1
+        return result
+
+    def complete_delete_id(self, id:str, userid) -> int:
+        """指定したidのデータを完全に削除する
+
+        ユーザーに権限がない場合は-1を返す
+        """
+        if self.select_id(id)["user"] == userid:
+            sql = f'DELETE FROM todo where id == {id}'
+            result = self.__c.execute(sql)
+            self.__conn.commit()
+        else:
+            result = -1
+        return result
+
+
     def select_id(self, id: str) -> dict:
         """idでデータを取得してdict形式で返す
 
@@ -90,7 +112,7 @@ class DB(object):
 
     def add_dict(self, data:dict)-> dict:
         """追加するデータをdictionaryで受け取る
-        
+
         引数 (self,追加したいデータ:dict)
 
         return 追加したデータ
@@ -107,6 +129,8 @@ class DB(object):
             if item[0] in newdata.keys():
                 newdata[item[0]] = item[1]
         # ここで、limit_atがちゃんとフォーマットにあっているか見る
+        if newdata["limit_at"]==None:
+            newdata["limit_at"] = DEFAULT["limit_at"]
         if not re.match(r'^\d{4}/\d{2}/\d{2} \d{1,2}:\d{2}$', newdata["limit_at"]):
             newdata["limit_at"] = DEFAULT["limit_at"]
         # 現在時刻取得
@@ -142,7 +166,7 @@ class DB(object):
         status_code = 400
         keys = DEFAULT.keys()
         now = datetime.datetime.now()
-        now_f = str(now)[0:19]
+        now_f = datetime.datetime.now().strftime('%Y/%m/%d %H:%M')
         if column == 'id' or column == 'update_at':
             status_code = 404
             return status_code
@@ -190,7 +214,7 @@ class DB(object):
 
     def add(self, title: str, limit_at: str):
         """title と limit_at (有効期限) を登録
-        
+
         これは既存のシステムを保つためにあるものなので、add_dict()を使ってほしい
         """
         update_at = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -208,25 +232,75 @@ class DB(object):
             str_list += '\n'
         return str_list
 
-    def dict_list(self) ->list:
+    def dict_list(self, mode=0, show_over_deadline=1, user_id=None) -> list:
         """ToDo DB の各データをそれぞれdictにして、dictのリストを返す
+
+        引数でmode=1とすると、削除されたデータを含めて取得
+
+        引数でshow_over_deadline=0 とすると、期限切れのものを含めて取得、 2 とすると、期限切れと未のものを取得、
+        3 とすると、未のものだけ取得
+
+        引数でuser_id= ユーザーのid とすると、特定ユーザーのデータのみ取得
 
         戻り値の形
         [{データ1 dict},{データ2 dict},{データ3 dict}]
         """
+        now = datetime.datetime.now()
         dict_list = []
         columns = self.__conn.execute("select * from todo").description
-        for i in range(20):
-            fromnum = i*50+1
-            tonum = (i+1)*50
-            for r in self.__c.execute(f"select * from todo WHERE id BETWEEN {fromnum} and {tonum}"):
-                item = list(map(str, r))
-                data = {}
-                for i in range(len(columns)):
-                    data[columns[i][0]] = item[i]
-                    i += 1
-                dict_list.append(data)
+        for r in self.__c.execute(f"select * from todo"):
+            item = list(map(str, r))
+            data = {}
+            for i in range(len(columns)):
+                data[columns[i][0]] = item[i]
+                i += 1
+            # 削除済みのものはここで排除する。またint型に直すものを直す
+            data["id"]=int(data["id"])
+            data["noticetime"]=int(data["noticetime"])
+            if "deleted" in data.keys():
+                data["deleted"]=int(data["deleted"])
+                if mode == 0 and data["deleted"] == 1:
+                    continue
+            # 期限切れのものを排除する
+            if show_over_deadline == 0:
+                if datetime.datetime.strptime(data["limit_at"], '%Y/%m/%d %H:%M')-now < datetime.timedelta(hours=0):
+                    continue
+            # 済のものを排除する
+            if show_over_deadline == 2:
+                if data["status"] == '済':
+                    continue
+            # 済、期限切れのものを排除する
+            if show_over_deadline == 3:
+                if data["status"] == '済' or data["status"] == '期限切れ':
+                    continue
+            # 他のユーザーのものを排除する
+            if user_id != None:
+                if data["user"] != user_id and data["user"] !="all":
+                    continue
+            dict_list.append(data)
         return dict_list
+
+    def dict_list_sorted(self, keycolumn="limit_at", show_over_deadline=0, showdeleted=0, user_id=None) -> list:
+        """ToDo DB の各データをそれぞれdictにして、dictのリストを返す
+
+        全データ期限の早い順に並び変えられている。
+
+        引数でkeycolumn= 列の名前 とすると、指定した列でソート（基本はlimit_at用なので、それ以外は対応していない可能性あり）
+
+        引数でshowdeleted=1 とすると、削除されたデータを含めて取得
+
+        引数でshow_over_deadline=0 とすると、期限切れのものを含めて取得
+
+        引数でuser_id= ユーザーのid とすると、特定ユーザーのデータのみ取得
+
+        戻り値の形
+        [{データ1 dict},{データ2 dict},{データ3 dict}]
+        """
+
+        dict_list=self.dict_list(mode=showdeleted, show_over_deadline=show_over_deadline, user_id=user_id)
+        data_sorted = sorted(dict_list, key=lambda x: x[keycolumn])
+
+        return data_sorted
 
 
     def search(self, column, text, mode=0) ->list:
