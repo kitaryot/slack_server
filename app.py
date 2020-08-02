@@ -183,7 +183,7 @@ def handle_message(event_data):
             text_body = text[1:]
 
             todo_add = re.search(r'^add\s+(\S+)\s+(\S+)$', text_body)
-            todo_list_notdone = re.search(r'^list', text_body)
+            todo_list = re.search(r'^list', text_body)
             todo_list_all = re.search(r'^list\s+all$', text_body)
             todo_list_all_users = re.search(r'^list\s+all\s+users$', text_body)
             todo_reset = re.search(r'^reset$', text_body)
@@ -198,8 +198,8 @@ def handle_message(event_data):
 
             if todo_add:
                 msg = todo.todo_add(user, todo_add.group(1), todo_add.group(2))
-            elif todo_list_notdone:
-                msg = todo.todo_list_notdone(user)
+            elif todo_list:
+                msg = todo.todo_list(user)
             elif todo_list_all:
                 msg = todo.todo_list(user)
             elif todo_list_all_users:
