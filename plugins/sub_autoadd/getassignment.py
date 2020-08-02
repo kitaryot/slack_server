@@ -5,7 +5,7 @@ import time
 
 def getframe(session, url):
     html = session.get(url)
-    time.sleep(1)
+    time.sleep(0.3)
     soup = BeautifulSoup(html.text, "html.parser")
     frame = soup.find("iframe")
     return frame["src"]
@@ -13,7 +13,7 @@ def getframe(session, url):
 
 def getasmdata(session, url):
     html = session.get(url)
-    time.sleep(1)
+    time.sleep(0.3)
     soup = BeautifulSoup(html.text, "html.parser")
     trs = soup.find_all("tr")
     assignments = []
@@ -31,7 +31,7 @@ def getasmdata(session, url):
 
 def gettestdata(session, url):
     html = session.get(url)
-    time.sleep(1)
+    time.sleep(0.3)
     soup = BeautifulSoup(html.text, "html.parser")
     tbodies = soup.find_all("tbody")
     assignments = []
@@ -72,7 +72,7 @@ def gettestdata(session, url):
 def getassignment(session, url, mode):
     # mode:0->assignment 1->test
     html = session.get(url)
-    time.sleep(1)
+    time.sleep(0.3)
     soup = BeautifulSoup(html.text, "html.parser")
     # 課題をnextsに格納。特殊な場合を除き1ページに一つしかない。
     if mode == 0:

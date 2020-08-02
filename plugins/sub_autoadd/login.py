@@ -8,7 +8,7 @@ def login(username, password):
     # PandAのログインページ
     login_url = "https://cas.ecs.kyoto-u.ac.jp/cas/login"
     session = requests.session()
-    time.sleep(1)
+    time.sleep(0.3)
     html = session.get(login_url)
     soup = BeautifulSoup(html.text, "html.parser")
     # inputを全て取得
@@ -31,7 +31,7 @@ def tomypage(session):
     url = "https://panda.ecs.kyoto-u.ac.jp/portal/login/"
     try:
         html = session.get(url)
-        time.sleep(1)
+        time.sleep(0.3)
         soup = BeautifulSoup(html.text, "html.parser")
         # 上の帯状の項目の各urlを取得
         lis = soup.find_all("li")
@@ -63,7 +63,7 @@ def tomypage(session):
                 setuppage_url = page["href"]
 
         html_setup = session.get(setuppage_url)
-        time.sleep(1)
+        time.sleep(0.3)
         soup=BeautifulSoup(html_setup.text, "html.parser")
         page_urls = []
         page_titles = []

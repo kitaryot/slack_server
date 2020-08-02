@@ -89,7 +89,7 @@ def strarrange(assignments):
             # status = "未"
             status = tools.autostatus(assignment, now)
         newarr.append(
-            {"title": assignment["title"], "status": status, "limit_at": dueDate, "subject": assignment["subject"], "user": assignment["user"],})
+            {"title": assignment["title"], "status": status, "limit_at": dueDate, "subject": assignment["subject"], "user": assignment["user"]})
     return newarr
 
 
