@@ -224,3 +224,5 @@ def todo_add_sub(user_id, data:dict, announce=False) -> str:
             msg+=f"\n{item[0]}: {item[1]}"
         return msg
     return "何らかの不具合により追加できません。"
+
+    
