@@ -5,9 +5,9 @@ import time
 from plugins import tools
 
 DEFAULT = {"title": "Noname", "limit_at": "2999/12/31 23:59",
-           "update_at": "2000/01/01 0:00", "status": "未", "noticetime": 3, "user": None, "deleted": 0, "subject": None}
+           "update_at": "2000/01/01 0:00", "status": "未", "noticetime": 3, "user": None, "deleted": 0, "subject": None,"note": None,"importance": "中"}
 DEFAULT_TYPE = {"title": "text NOT NULL", "limit_at": "text",
-                "update_at": "text NOT NULL", "status": "text", "noticetime": "integer NOT NULL", "user": "text", "deleted":"bit", "subject": "text"}
+                "update_at": "text NOT NULL", "status": "text", "noticetime": "integer NOT NULL", "user": "text", "deleted":"bit", "subject": "text","note": "text","importance": "text NOT NULL"}
 
 
 class DB(object):
@@ -60,28 +60,24 @@ class DB(object):
             if dict_list[i]["title"] == None or dict_list[i]["title"] == "None":
                 dict_list[i]["deleted"]=1
                 dict_list[i]["limit_at"]=DEFAULT["limit_at"]
-            self.add_dict(dict_list[i])
+            self.add_dict(dict_list[i], update_update_at = 0)
 
-    def delete_id(self, id: str, userid) -> int:
+    def delete_id(self, id: str, userid: str, secret = False) -> int:
         """指定したidのデータを削除する
 
         ユーザーに権限がない場合は-1を返す
+
+        オプションで内容も初期化することが出来る。
         """
         if self.select_id(id)["user"]==userid:
             result = self.change_id(id, "deleted", 1)
-        else:
-            result = -1
-        return result
-
-    def complete_delete_id(self, id:str, userid) -> int:
-        """指定したidのデータを完全に削除する
-
-        ユーザーに権限がない場合は-1を返す
-        """
-        if self.select_id(id)["user"] == userid:
-            sql = f'DELETE FROM todo where id == {id}'
-            result = self.__c.execute(sql)
-            self.__conn.commit()
+            if result == 200 and secret:
+                for key, value in DEFAULT.items():
+                    if key=="deleted" or key=="id" or key=="update_at" or key=="user":
+                        continue
+                    result = self.change_id(id, key, value)
+                    if result != 200:
+                        break
         else:
             result = -1
         return result
@@ -110,7 +106,7 @@ class DB(object):
         return dict_list[0]
 
 
-    def add_dict(self, data:dict)-> dict:
+    def add_dict(self, data:dict, update_update_at=1)-> dict:
         """追加するデータをdictionaryで受け取る
 
         引数 (self,追加したいデータ:dict)
@@ -135,7 +131,9 @@ class DB(object):
             newdata["limit_at"] = DEFAULT["limit_at"]
         # 現在時刻取得
         update_at = datetime.datetime.now().strftime('%Y/%m/%d %H:%M')
-        newdata["update_at"] = update_at
+        # update_update_atによってupdate_atを更新するか決める
+        if update_update_at == 1:
+            newdata["update_at"] = update_at
         # sql文を作文
         msg1 = "insert into todo ("
         msg2 = "values("
@@ -148,7 +146,7 @@ class DB(object):
             datalist.append(newdata[tag])
         msg1 += "update_at)"
         msg2 += "?)"
-        datalist.append(update_at)
+        datalist.append(newdata["update_at"])
         sql = msg1+msg2
         self.__c.execute(sql, datalist)
         self.__conn.commit()
@@ -298,7 +296,7 @@ class DB(object):
         """
 
         dict_list=self.dict_list(mode=showdeleted, show_over_deadline=show_over_deadline, user_id=user_id)
-        data_sorted = sorted(dict_list, key=lambda x: x[keycolumn])
+        data_sorted = sorted(dict_list, key=lambda x: tools.order(x[keycolumn],keycolumn))
 
         return data_sorted
 
@@ -321,5 +319,6 @@ class DB(object):
                 if value == text:
                     matched.append(dict)
         return matched
+
 
 
