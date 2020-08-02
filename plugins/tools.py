@@ -4,6 +4,8 @@ import requests
 import json
 import re
 from dateutil.relativedelta import relativedelta
+from urllib3.util.retry import Retry
+from requests.adapters import HTTPAdapter
 
 
 # 今後誰かが取得したくなった時の参考にchannel名、相手の名前等を取得する方法を載せておく
@@ -128,8 +130,13 @@ def postMessage(text, attachments:list, channel="bot-test", username="お知ら�
         "icon_emoji":icon_emoji,
         "as_user": as_user
     }
+
+    s = requests.Session()
+    retries = Retry(total=1)
+    s.mount('https://', HTTPAdapter(max_retries=retries))
     url = 'https://slack.com/api/chat.postMessage'
-    r_post = requests.post(url, headers=headers, json=data)
+    r_post = s.request('POST', url, headers=headers, json=data)
+    # r_post = requests.post(url, headers=headers, json=data)
     return json.loads(r_post.text)
 
 # messageを編集
@@ -162,3 +169,27 @@ def noticetimeSet(limit_at:datetime, now):
     elif diff < datetime.timedelta(days=3):
         noticetime = 2
     return noticetime
+
+def order(data: str,column: str):
+    """データの順序を定める。
+    
+    大小比較によるソートに利用される。
+    
+    """
+    if column == "importance":
+        if data == "大":
+            return 1
+        if data == "中":
+            return 2
+        if data == "小":
+            return 3
+        return 0
+    if column == "status":
+        if data == "未":
+            return 1
+        if data == "期限切れ":
+            return 2
+        if data == "済":
+            return 3
+        return 0
+    return data

@@ -189,10 +189,12 @@ def handle_message(event_data):
             todo_reset = re.search(r'^reset$', text_body)
             todo_search = re.search(r'^search\s+(\S+)$', text_body)
             todo_change_id = re.search(r'^change\s+(\S+)\s+(\S+)\s+(\S+)$', text_body)
-            todo_delete_id = re.search(r'^delete\s+(\S+)', text_body)
-            todo_complete_delete_id = re.search(r'^delete\s+com\s+(\S+)', text_body)
+            todo_delete = re.search(r'^delete\s+(\S+)', text_body)
+            todo_delete_secret = re.search(r'^delete_secret\s+(\d+)$', text_body)
             todo_short = re.search(r'^short\s+(\S+)$', text_body)
             todo_update = re.search(r'^update$', text_body)
+            todo_cancel_announcement = re.search(r'^cancel\s+announcement\s+(\d+)$', text_body)
+            todo_finish = re.search(r'^finish\s+(.*)', text_body)
 
             if todo_add:
                 msg = todo.todo_add(user, todo_add.group(1), todo_add.group(2))
@@ -209,20 +211,23 @@ def handle_message(event_data):
             elif todo_change_id: 
                 msg = todo.todo_change_id(todo_change_id.group(1), \
                     todo_change_id.group(2), todo_change_id.group(3))
+            elif todo_delete_secret:
+                msg = todo.todo_delete_secret(user, todo_delete_secret.group(1))
             elif todo_short:
                 msg = shorturl.short_url(todo_short.group(1))
-            elif todo_delete_id:
-                result = database.delete_id(todo_delete_id.group(1), user)
-                if result == -1:
-                    msg = 'データの消去に失敗しました'
-                else:
-                    msg = 'データを正常に消去しました'
-            elif todo_complete_delete_id:
-                result = database.complete_delete_id(todo_complete_delete_id.group(1), user)
-                if result == -1:
-                    msg = 'データの完全消去に失敗しました'
-                else:
-                    msg = 'データを完全に消去しました'
+            elif todo_delete:
+                msg = todo.todo_delete(user, todo_delete.group(1))
+            elif todo_cancel_announcement:
+                msg = todo.todo_cancel_announcement(todo_cancel_announcement.group(1))
+            elif todo_finish:
+                msg = todo.todo_finish(user, todo_finish.group(1))
+
+            # elif todo_complete_delete_id:
+            #     result = database.complete_delete_id(todo_complete_delete_id.group(1), user)
+            #     if result == -1:
+            #         msg = 'データの完全消去に失敗しました'
+            #     else:
+            #         msg = 'データを完全に消去しました'
             elif todo_update: 
                 login_data = user_database.select_id(user)
                 if login_data["id"] == None:
@@ -250,12 +255,12 @@ def pandaThread(user, esc_id, password, channel, ts):
     panda_database_names[user]  = DB(os.environ["TODO_DB"])
     status_code = autoadd.main(user=user, username=esc_id, password=password, database=panda_database_names[user])
     if status_code == 400:
-        slack_bot_client.chat_update(channel=channel, text='esc-idとパスワードが間違っています。\n/pandaコマンドを入力して再登録してください', ts=ts)
+        slack_bot_client.chat_update(channel=channel, text='esc-idまたはパスワードが間違っています。\n/pandaコマンドを入力して再登録してください', ts=ts)
     elif status_code == 200:
         print('pandaThread終了')
         try:
             slack_bot_client.chat_update(channel=channel, text='更新が終了しました', ts=ts)      
-            msg = todo.todo_list_notdone(user)
+            msg = todo.todo_list(user)
             slack_bot_client.chat_update(channel=channel, text=msg, ts=ts)
         except:
             print('failed')

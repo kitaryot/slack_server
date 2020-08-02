@@ -12,8 +12,8 @@ from . import tools
 import asyncio
 
 
-def asmadd(newdata, database):
-    olddata = database.dict_list()
+def asmadd(newdata, database, user_id):
+    olddata = database.dict_list(mode=1, user_id=user_id)
     newnewdatas = []
     for data in newdata:
         # 過去に追加しているかみる
@@ -85,7 +85,7 @@ def main(user, username, password, database):
     newdata = strarrange(assignment)
 
     # 追加
-    asmadd(newdata, database)
+    asmadd(newdata, database, user_id=user)
     # id整頓
     database.clean()
     print("finish")
