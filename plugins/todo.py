@@ -65,6 +65,8 @@ def todo_list(user):
     data = database.dict_list_sorted(show_over_deadline=3, user_id=user)
     num = 0
     str_list = ''
+    now = str(datetime.datetime.now())
+    now_f = now.replace('-', '/')[5:16]
     for r in data:
         num += 1
         if r["importance"] == '大':
@@ -79,9 +81,9 @@ def todo_list(user):
             else:
                 str_list += f' `{r["id"]}` {r["subject"]} *{r["title"]}*   期限：{r["limit_at"][5:]}\n'
     if str_list == '':
-        str_list = '現在のリストにはタスクが存在しません。'
+        str_list = now_f + '現在、リストにはタスクが存在しません。'
     else:
-        str_list = f'現在未完了のタスクは以下の{num}件です。\n' + str_list
+        str_list = f'{now_f}現在、未完了のタスクは以下の{num}件です。\n' + str_list
     return str_list
 
 def todo_list_notdone(user):
