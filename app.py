@@ -149,7 +149,7 @@ def modal_post():
 
 def open_modal(command: SlashCommandInteractiveEvent):
     title = PlainTextObject(text="ID, password 入力フォーム")
-    color_input_blocks = [InputBlock(label=PlainTextObject(text="esc_id"),
+    color_input_blocks = [InputBlock(label=PlainTextObject(text="esc-id"),
                                      element=PlainTextInputElement(placeholder="a020....", action_id='esc_id'), block_id='esc_id'),
                           InputBlock(label=PlainTextObject(text="Password"),
                                      element=PlainTextInputElement(placeholder="password", action_id='password'),
@@ -233,7 +233,7 @@ def handle_message(event_data):
                 if login_data["id"] == None:
                     slack_bot_client.chat_postMessage(channel=channel, text='esc-idとパスワードが未登録です。\n/pandaコマンドを入力して登録してください')
                 else:
-                    chat = slack_bot_client.chat_postMessage(channel=channel, text='更新中...しばらくお待ちください')  
+                    chat = slack_bot_client.chat_postMessage(channel=channel, text='更新中...２分ほど要します。しばらくお待ちください。')  
 
                     if panda_sched.get_job(user) != None:
                         panda_sched.remove_job(user)

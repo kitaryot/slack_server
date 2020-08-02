@@ -70,18 +70,18 @@ def todo_list(user):
         if r["importance"] == '大':
             #もう少しわかりやすく区別したい
             if r["subject"] == 'None':
-                str_list += f' _`{r["id"]}`_ _*{r["title"]}*_   期限：{r["limit_at"][5:]}   status：{r["status"]} \n'
+                str_list += f' _`{r["id"]}`_ _*{r["title"]}*_   期限：{r["limit_at"][5:]}\n'
             else:
-                str_list += f' _`{r["id"]}`_ _{r["subject"]}_ _*{r["title"]}*_   期限：{r["limit_at"][5:]}   status：{r["status"]} \n'
+                str_list += f' _`{r["id"]}`_ _{r["subject"]}_ _*{r["title"]}*_   期限：{r["limit_at"][5:]}\n'
         else:
             if r["subject"] == 'None':
-                str_list += f' `{r["id"]}` *{r["title"]}*   期限：{r["limit_at"][5:]}   status：{r["status"]} \n'
+                str_list += f' `{r["id"]}` *{r["title"]}*   期限：{r["limit_at"][5:]}\n'
             else:
-                str_list += f' `{r["id"]}` {r["subject"]} *{r["title"]}*   期限：{r["limit_at"][5:]}   status：{r["status"]} \n'
+                str_list += f' `{r["id"]}` {r["subject"]} *{r["title"]}*   期限：{r["limit_at"][5:]}\n'
     if str_list == '':
         str_list = '現在のリストにはタスクが存在しません。'
     else:
-        str_list = f'現在のタスクは以下の{num}件です。\n' + str_list
+        str_list = f'現在未完了のタスクは以下の{num}件です。\n' + str_list
     return str_list
 
 def todo_list_notdone(user):
