@@ -46,7 +46,7 @@ panda_database_names = {}
 
 sched = BackgroundScheduler(daemon=True)
 panda_sched = BackgroundScheduler(deamon=True)
-sched.add_job(func=noticeThread, trigger='interval', seconds=180)
+sched.add_job(func=noticeThread, trigger='interval', seconds=60)
 sched.start()
 panda_sched.start()
 
