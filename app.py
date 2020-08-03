@@ -25,7 +25,7 @@ from plugins import tools
 from apscheduler.schedulers.background import BackgroundScheduler
 import atexit
 
-user_dbname = 'user.db'
+user_dbname = os.environ["USER_DB"]
 user_need_init = not os.path.exists(user_dbname)
 user_database = UserDB(user_dbname)
 if user_need_init:

@@ -81,7 +81,7 @@ def todo_list(user):
             else:
                 str_list += f' `{r["id"]}` {r["subject"]} *{r["title"]}*   期限：{r["limit_at"][5:]}\n'
     if str_list == '':
-        str_list = now_f + '現在、リストにはタスクが存在しません。'
+        str_list = now_f + '現在、リストには未完了のタスクが存在しません。'
     else:
         str_list = f'{now_f}現在、未完了のタスクは以下の{num}件です。\n' + str_list
     return str_list
