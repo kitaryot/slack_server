@@ -19,7 +19,10 @@ def asmadd(newdata, database, user_id):
         # 過去に追加しているかみる
         for old in olddata:
             if data["subject"]+data["title"] == old["subject"]+old["title"]:
-                break
+                if data["status"] == old["status"] and data["limit_at"] == old["limit_at"]:
+                    break
+                else:
+                    newnewdatas.append(data)            
         else:
             newnewdatas.append(data)
     

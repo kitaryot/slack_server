@@ -16,7 +16,7 @@ class Notice():
 
     def __notice_post(self, notice_tasks:list):
         for task in notice_tasks:
-            pprint.pprint(tools.postMessage(task["text"], task["attachments"], channel=task["channel"], as_user=True, icon_emoji=':panda_face:'))
+            tools.postMessage(task["text"], task["attachments"], channel=task["channel"], as_user=True, icon_emoji=':panda_face:')
 
 
     def __notice_notdone(self) -> list:
