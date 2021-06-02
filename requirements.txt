@@ -36,7 +36,7 @@ slackeventsapi==2.2.0
 soupsieve==2.0.1
 toml==0.10.1
 twitter==1.18.0
-urllib3==1.25.9
+urllib3==1.26.5
 websocket-client==0.44.0
 Werkzeug==1.0.1
 wrapt==1.12.1
